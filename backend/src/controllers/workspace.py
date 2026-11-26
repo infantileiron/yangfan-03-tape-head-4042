@@ -1,9 +1,11 @@
 from fastapi import Response
+from sqlalchemy import select
 
 from src.business.profile import PROFILE
 from src.config.settings import Session
-from src.schemas.resources import dataset_view, review_view, run_view
-from src.services import datasets, reviews, runs
+from src.models.baseline import Baseline
+from src.schemas.resources import baseline_view, dataset_view, review_view, run_view
+from src.services import baselines, datasets, reviews, runs
 from src.utils.csv_data import render_csv
 
 
@@ -23,7 +25,13 @@ def dataset_csv(dataset_id):
 
 def run_details(run_id):
     with Session() as db:
-        result = run_view(runs.require(db, run_id), include_result=True)
+        run = runs.require(db, run_id)
+        result = run_view(run, include_result=True)
         review = reviews.lookup(db, run_id)
         result["review"] = review_view(review) if review else None
+        result["baselines"] = [
+            baseline_view(row)
+            for row in db.scalars(select(Baseline).where(Baseline.run_id == run.id).order_by(Baseline.tier))
+        ]
+        result["issuance"] = baselines.issuance_summary(db, run)
         return result

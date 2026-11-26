@@ -26,7 +26,8 @@ class Calibration:
         projected = normalized @ axes.T
         reconstructed = projected @ axes
         average_residual = float(np.square(normalized - reconstructed).sum(axis=1).mean())
-        axis_variances = np.square(singular_values[:2]) / (len(reference) - 1)
+        denominator = max(len(reference) - 1, 1)
+        axis_variances = np.square(singular_values[:2]) / denominator
         if average_residual <= 1e-8 or np.min(axis_variances) <= 1e-8:
             raise ValueError(f"{speed} cm/s 参考段变化过少，无法识别重构偏离。")
         explained_share = float(np.square(singular_values[:2]).sum() / np.square(singular_values).sum())

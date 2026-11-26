@@ -13,6 +13,8 @@ class Review(Base):
     run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"))
     decision: Mapped[str] = mapped_column(String(20))
     samples: Mapped[list] = mapped_column(JSON)
+    # Frozen export rows at sign time, so a signed handoff always exports 当时那份.
+    snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     note: Mapped[str] = mapped_column(Text)
     reviewer: Mapped[str] = mapped_column(String(160))
     created_at: Mapped[datetime] = mapped_column(default=utcnow)

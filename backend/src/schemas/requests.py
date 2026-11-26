@@ -30,3 +30,23 @@ class ReviewRequest(Request):
     decision: Decision
     samples: Annotated[list[Annotated[str, StringConstraints(min_length=1, max_length=120)]], Field(max_length=500)]
     note: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=1000)]
+
+
+class RevokeReelRequest(Request):
+    reason: Annotated[str | None, StringConstraints(strip_whitespace=True, max_length=500)] = None
+    tier: Annotated[str | None, StringConstraints(strip_whitespace=True, max_length=8)] = None
+
+
+class RevocationRequest(Request):
+    reel: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
+    reason: Annotated[str | None, StringConstraints(strip_whitespace=True, max_length=500)] = None
+    tier: Annotated[str | None, StringConstraints(strip_whitespace=True, max_length=8)] = None
+
+
+class RecomputeRequest(Request):
+    dataset_id: Annotated[str, StringConstraints(min_length=36, max_length=36)]
+    label: Name | None = None
+    parameter: FiniteFloat | None = None
+    tiers: list[Annotated[str, StringConstraints(min_length=1, max_length=8)]] | None = None
+    sync: bool = True
+

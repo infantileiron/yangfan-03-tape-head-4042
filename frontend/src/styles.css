@@ -223,3 +223,22 @@ tbody tr:hover { background: var(--side); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Baseline / reel validity states */
+.s-active { color: var(--accent-ink); border-color: var(--accent); }
+.s-invalid, .s-revoked, .s-stale { color: var(--error); border-color: var(--error); }
+.s-suspended { color: oklch(82% 0.13 80); border-color: oklch(82% 0.13 80); }
+.s-qualified { color: var(--accent-ink); border-color: var(--accent); }
+.issuance-warning {
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+  margin: .6rem 0;
+  color: var(--ink);
+  background: color-mix(in oklab, var(--error) 12%, transparent);
+}
+.issuance-warning ul { margin: .4rem 0 .2rem 1.1rem; }
+.inline-form { display: flex; flex-wrap: wrap; gap: .8rem; align-items: end; margin: .6rem 0; }
+.inline-form label { display: flex; flex-direction: column; gap: .25rem; }
+.table-scroll { overflow-x: auto; }
+.note-row td { opacity: .8; font-size: .85em; }

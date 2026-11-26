@@ -30,10 +30,16 @@ def signed_download(run_id):
         if review is None or review.decision != Decision.APPROVE.value:
             raise HTTPException(409, "复核员签发后才能下载交接单。")
         selected = set(review.samples)
-        rows = [
-            {**row, "reviewer": review.reviewer, "review_note": review.note}
-            for row in run.result["rows"] if row["sample_id"] in selected
-        ]
+        # Always export 当时那份: prefer the snapshot frozen at sign time, so
+        # later revocation/invalidation never changes an already-issued sheet.
+        snapshot = getattr(review, "snapshot", None)
+        if snapshot and snapshot.get("rows"):
+            rows = snapshot["rows"]
+        else:
+            rows = [
+                {**row, "reviewer": review.reviewer, "review_note": review.note}
+                for row in run.result["rows"] if row["sample_id"] in selected
+            ]
         contents = render_csv(rows, result_keys() + ["reviewer", "review_note"], protect=True)
         return Response(
             "\ufeff" + contents,

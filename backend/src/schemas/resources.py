@@ -28,10 +28,57 @@ def run_view(run, include_result=False):
 
 
 def review_view(review):
+    snapshot = getattr(review, "snapshot", None)
     return {
         "id": review.id, "run_id": review.run_id, "decision": review.decision,
         "samples": review.samples, "note": review.note, "reviewer": review.reviewer,
+        "snapshot": snapshot,
+        "has_snapshot": bool(snapshot),
         "created_at": utc(review.created_at),
+    }
+
+
+def reel_view(reel, derived=None):
+    item = {
+        "reel": reel.reel,
+        "tier": reel.tier,
+        "status": "revoked",
+        "reason": reel.reason,
+        "actor": reel.actor,
+        "revoked_at": utc(reel.created_at),
+    }
+    if derived:
+        item.update(derived)
+    return item
+
+
+def baseline_view(baseline):
+    status = baseline.status
+    return {
+        "id": baseline.id,
+        "tier": baseline.tier,
+        "status": status,
+        "state": status,
+        "active": status == "active",
+        "invalid": status == "invalid",
+        "stale": status == "stale",
+        "suspended": status == "suspended",
+        "paused": status == "suspended",
+        "generation": baseline.generation,
+        "fence": baseline.fence,
+        "run_id": baseline.run_id,
+        "dataset_id": baseline.dataset_id,
+        "source_checksum": baseline.source_checksum,
+        "parameter": baseline.parameter,
+        "threshold": baseline.threshold,
+        "note": baseline.note,
+        "fit_reels": list(baseline.fit_reels or []),
+        "holdout_reels": list(baseline.holdout_reels or []),
+        "used_reels": list(baseline.used_reels or []),
+        "detail": baseline.detail,
+        "actor": baseline.actor,
+        "created_at": utc(baseline.created_at),
+        "finished_at": utc(baseline.finished_at),
     }
 
 

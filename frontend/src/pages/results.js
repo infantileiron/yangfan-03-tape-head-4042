@@ -30,8 +30,15 @@ export async function resultsPage(profile, account, id) {
     };
   }
   const result = run.result;
+  const blockedTiers = Object.entries(run.issuance?.tiers || {}).filter(([, info]) => !info.issuable);
+  const banner = blockedTiers.length ? `
+    <div class="issuance-warning" role="alert">
+      <strong>这份计算的部分基线已不能用于签发：</strong>
+      <ul>${blockedTiers.map(([tier, info]) => `<li>${e(tier)} cm/s：${e(info.reason || '基线已失效或暂停。')}</li>`).join('')}</ul>
+      <span>表内“通过校准”是当时的计算结论；撤销合格卷后需<a href="#baselines">重算基线</a>，或前往<a href="#handoff/${run.id}">复录交班</a>（未受影响档位仍可签发）。</span>
+    </div>` : '';
   return {
-    html: intro + `<div class="board results-board"><aside class="side">
+    html: intro + banner + `<div class="board results-board"><aside class="side">
       <h2>本次口径</h2><dl class="meta"><dt>${e(profile.parameter.label)}</dt><dd>${e(run.parameter)}</dd>
       <dt>数据版本</dt><dd><a href="#datasets/${run.dataset_id}">${shortId(run.dataset_id)}</a></dd>
       </dl><p class="muted">${e(profile.downstream)}</p>

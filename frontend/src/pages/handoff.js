@@ -12,6 +12,13 @@ export async function handoffPage(profile, account, id) {
   const selected = completed.find(run => run.id === id) || completed[0];
   const run = selected && await api.run(selected.id);
   const review = run?.review;
+  const blockedTiers = Object.entries(run?.issuance?.tiers || {}).filter(([, info]) => !info.issuable);
+  const issuanceWarning = (!review && blockedTiers.length) ? `
+    <div class="issuance-warning" role="alert">
+      <strong>以下带速档当前不能签发：</strong>
+      <ul>${blockedTiers.map(([tier, info]) => `<li>${e(tier)} cm/s：${e(info.reason || '基线已失效或暂停，请重算。')}</li>`).join('')}</ul>
+      <p class="muted">未受影响档位的样本仍可勾选签发；处理办法见<a href="#baselines">合格卷·基线</a>。</p>
+    </div>` : '';
   const selector = completed.map(item => `<option value="${item.id}" ${item.id === selected?.id ? 'selected' : ''}>${e(item.label)}</option>`).join('');
   const actions = review?.decision === 'approve' ?
     exportButton('/runs/' + run.id + '/handoff.csv', 'handoff.csv', '下载签发清单') : '';
@@ -30,7 +37,7 @@ export async function handoffPage(profile, account, id) {
         <strong>${e(runs.find(candidate => candidate.id === item.run_id)?.label || shortId(item.run_id))}</strong><span>${status(item.decision)}</span></a>`).join('') || '<p>暂无记录</p>'}</aside>
       <section class="work">
       ${run ? `<label>已完成计算单<select id="choose-review">${selector}</select></label>
-      <p><a href="#results/${run.id}">查看完整结果</a></p>${review ? `<div class="review-record">${status(review.decision)}
+      <p><a href="#results/${run.id}">查看完整结果</a></p>${issuanceWarning}${review ? `<div class="review-record">${status(review.decision)}
         <strong>${e(review.reviewer)}</strong><p>${e(review.note)}</p>
         <p class="muted">${review.samples.length} 条交接样本 · ${e(timeText(review.created_at))}</p></div>` :
         form || '<p>此计算单等待复核员签审。</p>'}` :

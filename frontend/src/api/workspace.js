@@ -12,5 +12,10 @@ export const api = {
   review: (id, data) => request('/runs/' + id + '/review', { method: 'POST', body: data }),
   reviews: () => request('/reviews'),
   audit: () => request('/audit'),
+  reels: () => request('/reels'),
+  revokeReel: (reel, data = {}) => request('/reels/' + encodeURIComponent(reel) + '/revoke', { method: 'POST', body: data }),
+  baselines: (params = '') => request('/baselines' + params),
+  baselinePlan: datasetId => request('/baselines/plan?dataset_id=' + encodeURIComponent(datasetId)),
+  recompute: data => request('/baselines/recompute', { method: 'POST', body: data }),
   download: path => request(path, { download: true }),
 };

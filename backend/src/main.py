@@ -11,7 +11,7 @@ from src.config.settings import SEED_DEMO, Session, engine, redis
 from src.middlewares.headers import add_headers
 from src.middlewares.throttle import login_limit
 from src.models.dataset import Dataset
-from src.routes import auth, workspace
+from src.routes import auth, quality, workspace
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +32,7 @@ app.middleware("http")(login_limit)
 app.middleware("http")(add_headers)
 app.include_router(auth.router, prefix="/api")
 app.include_router(workspace.router, prefix="/api")
+app.include_router(quality.router, prefix="/api")
 
 
 @app.get("/healthz")

@@ -13,6 +13,7 @@
   "labels": {
     "datasets": "试录测量表",
     "runs": "拟合校准基线",
+    "baselines": "合格卷·基线",
     "results": "试录处置单",
     "handoff": "复录交班",
     "input": "双轨试录测量值",

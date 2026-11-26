@@ -27,6 +27,17 @@
 
 演示集 `HS-1125-双轨试录与合格参照.csv` 由 `backend/src/business/demo.py` 用固定数据或固定随机种子生成。工作台保留每次运行使用的输入版本、参数、结果和签审人。业务判断由服务端执行，前端图表直接读取返回的数值。
 
+## 合格卷撤销与基线时效
+
+合格卷（参与“参考”拟合或“留出”定门槛的卷）被撤销后，时效规则如下，核心实现在 `backend/src/business/baselines.py`，持久化与签发闸口在 `services/reels.py`、`services/baselines.py`、`services/reviews.py`：
+
+- **立即失效**：撤销一卷会立刻把所有“拟合卷 ∪ 留出卷”包含该卷的 `active` 基线置为 `invalid`；未用到该卷的其他档/基线保持 `active`，照常签发。
+- **重算口径**：重算先剔除撤销卷；同一卷不得同时出现在拟合与留出中（`ReelOverlapError`），同档 distinct 留出卷不足 **3** 卷时该档置为 `suspended/paused`，暂停签发，直到重算出干净的新基线才恢复。
+- **并发围栏**：worker 在计算完成的事务里读取最新撤销集并按“本次实际使用的卷”登记状态。撤销前已认领、撤销后才晚完成的旧计算仍会被记为 `invalid`，签发闸口（行锁 + 实时撤销集）拒绝其签发；不会覆盖新基线。
+- **签发闸口与快照**：`POST /api/runs/{id}/review` 仅在勾选样本所属各档基线均有效时允许 `approve`，否则 409 并指明档位原因；`hold` 不受限。签发时把所选结果行冻结进 `reviews.snapshot`，`GET /api/runs/{id}/handoff.csv` 始终优先导出该快照，事后撤销/重算不改变“当时那份”。
+
+主要接口：`GET /api/reels`、`POST /api/reels/{reel}/revoke`（另有 `/api/revocations`、`/api/reels/revoke` 别名）、`GET /api/baselines[?tier=&dataset_id=]`、`GET /api/baselines/plan?dataset_id=`、`POST /api/baselines/recompute`。前端“合格卷·基线”页可一键撤销与重算，处置单/交班页会标出不可签发的档位。
+
 ## 一天的工作剧本
 
 1. 08:40 载入 HS-1125-双轨试录与合格参照.csv，确认两种带速各有 28 条参考段与 12 条留出合格段。
