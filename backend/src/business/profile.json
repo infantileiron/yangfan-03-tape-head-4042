@@ -1,0 +1,75 @@
+{
+  "title": "汇声磁带 · 多通道试转录校准",
+  "subtitle": "按带速比对双轨试录段，交付需要补录的卷号、区间与复录工序。",
+  "team": "汇声口述史录音室，7 人团队，每天用两台开盘机转录馆藏双轨磁带。",
+  "workflow": "机台操作员在测试音与静音片段上量测电平、高频损失、相位、抖晃与底噪，汇总成校准表，交班时与近期合格记录逐栏比对。",
+  "pain_points": [
+    "不同带速的相位与底噪基线不同，合并判读会误报。",
+    "逐栏阈值看不到高频、电平和相位变化之间的常见关联。",
+    "复录工单去掉了试录区间和参考段，接班人员需要回找源表。"
+  ],
+  "upstream": "开盘机试录日志与音频分析仪导出的双轨测量值。归档员先把近期同台架合格数据分成参考与留出样本。",
+  "downstream": "复录工位按卷号和时间区间补录。质检员回填复测读数，再决定是否交付编目。",
+  "labels": {
+    "datasets": "试录测量表",
+    "runs": "拟合校准基线",
+    "results": "试录处置单",
+    "handoff": "复录交班",
+    "input": "双轨试录测量值",
+    "action": "比对同速参考"
+  },
+  "algorithm": "同带速标准化 PCA · 重构残差与主成分距离",
+  "method": "先按带速分组，仅用参考段拟合均值、标准差和两维 PCA。对每条试录段计算标准化重构残差平方和 Q，以及按主成分方差归一的距离平方 T²。综合分取 max(Q / 参考段的平均 Q, T² / 2)，再除以同速留出合格段的经验分位边界。相对分超过 1 时建议复录。用前两主成分的方差归一距离找最近参考段，按残差或偏离最大的量测项给出复录工序。同速至少需 12 条参考与 8 条留出，参考测量无变化、残差退化、区间倒置或缺少待检段时会提示修正。录音波形由上游分析仪量测，页面处理表内读数。",
+  "seed_name": "HS-1125-双轨试录与合格参照.csv",
+  "scenario": [
+    "08:40 载入 HS-1125-双轨试录与合格参照.csv，确认两种带速各有 28 条参考段与 12 条留出合格段。",
+    "08:55 核对 HS-064A 的校准音区间，试录段 TR-A01 对应卷内 40–60 秒。",
+    "09:05 以工程师账号创建校准批次，采用 0.95 留出合格分位边界。",
+    "09:10 检查两档带速是否各自拟合基线，确认 TR-A01 的相对分不超过 1。",
+    "09:20 在处置单定位 HS-077B 的 TR-B04，卷内 210–230 秒，抖晃读数 0.62%。",
+    "09:30 导出复录交班表，交付卷号、区间、同速参考段与建议工序。",
+    "10:15 复录技师按交班单复测带速稳定性，安排 HS-077B 的同段回录。"
+  ],
+  "columns": [
+    {"key": "sample_id", "label": "段号", "type": "text"},
+    {"key": "reel", "label": "卷号", "type": "text"},
+    {"key": "start_s", "label": "起点（秒）", "type": "number", "min": 0, "max": 14400},
+    {"key": "end_s", "label": "终点（秒）", "type": "number", "min": 1, "max": 14401},
+    {"key": "speed", "label": "带速（cm/s）", "type": "text", "choices": ["9.5", "19"]},
+    {"key": "cohort", "label": "样本用途", "type": "text", "choices": ["参考", "留出", "待检"]},
+    {"key": "left_gain", "label": "左轨电平差（dB）", "type": "number", "min": -20, "max": 20},
+    {"key": "right_gain", "label": "右轨电平差（dB）", "type": "number", "min": -20, "max": 20},
+    {"key": "phase", "label": "双轨高频相位差（°）", "type": "number", "min": -180, "max": 180},
+    {"key": "treble_loss", "label": "高频相对损失（dB）", "type": "number", "min": -2, "max": 40},
+    {"key": "flutter", "label": "抖晃率（%）", "type": "number", "min": 0, "max": 5},
+    {"key": "noise", "label": "静音底噪（dBFS）", "type": "number", "min": -120, "max": 0}
+  ],
+  "parameter": {
+    "key": "quantile",
+    "label": "留出合格分位",
+    "default": 0.95,
+    "min": 0.8,
+    "max": 0.99,
+    "step": 0.01,
+    "description": "每档带速从留出合格段单独估算。调高分位会提高该档复录门槛。"
+  },
+  "result_columns": [
+    {"key": "sample_id", "label": "段号"},
+    {"key": "reel", "label": "卷号"},
+    {"key": "interval", "label": "录带区间"},
+    {"key": "speed", "label": "带速"},
+    {"key": "score", "label": "相对分"},
+    {"key": "evidence", "label": "最大偏离项"},
+    {"key": "ref_segment", "label": "同速参考段"},
+    {"key": "decision", "label": "处置与工序"}
+  ],
+  "chart": {"key": "score", "label": "校准边界相对分"},
+  "theme": {
+    "display": "Barlow Condensed",
+    "body": "IBM Plex Mono",
+    "hue": 143,
+    "chroma": 0.101,
+    "dark": true,
+    "layout": "studio"
+  }
+}
